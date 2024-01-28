@@ -98,8 +98,8 @@ fn main() {
     let mut script = String::with_capacity(len as usize);
     script_file.read_to_string(&mut script).unwrap();
 
-    let offsets_len = 19 * args.files.clone().map(|x| x.len()).unwrap_or(0)
-        - if args.files.is_some() { 1 } else { 0 };
+    let offsets_len = 19 * args.files.as_ref().map(|x| x.len()).unwrap_or(0)
+        - args.files.as_ref().map(|_| 1).unwrap_or(0);
 
     // set up placeholder for length counting
     let placeholder_code = format_code!(" ".repeat(offsets_len), " ".repeat(offsets_len), &script);
