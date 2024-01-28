@@ -2,6 +2,10 @@
 
 embed shellscripts and files into png files!
 
+see [silly.png](silly.png) for an example
+
+![silly.png](silly.png)
+
 ## usage
 
 ```sh
@@ -15,4 +19,4 @@ i wrote this between 2:30 and 6:00
 
 ## please do not use this to spread malware i will bite your head off
 
-it is also cc0, see [LICENSE](/LICENSE) for details
+it is also cc0, see [LICENSE](LICENSE) for details
