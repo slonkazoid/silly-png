@@ -101,13 +101,15 @@ fn main() {
     let offsets_len = 19 * args.files.clone().map(|x| x.len()).unwrap_or(0)
         - if args.files.is_some() { 1 } else { 0 };
 
-    let code = format_code!(" ".repeat(offsets_len), " ".repeat(offsets_len), &script);
-
-    let placeholder_text_chunk = TEXtChunk::new(args.keyword.clone(), code);
+    // set up placeholder for length counting
+    let placeholder_code = format_code!(" ".repeat(offsets_len), " ".repeat(offsets_len), &script);
+    let placeholder_text_chunk = TEXtChunk::new(args.keyword.clone(), placeholder_code);
     let mut encoded_placeholder = Vec::new();
     placeholder_text_chunk
         .encode(&mut encoded_placeholder)
         .unwrap();
+    let placeholder_len = encoded_placeholder.len();
+    drop(placeholder_text_chunk);
 
     let mut output_file = File::create(args.output.unwrap_or_else(|| {
         let mut path = args.png.clone();
@@ -119,7 +121,7 @@ fn main() {
     eprintln!("writing png data");
     output_file.write_all(&header).unwrap();
     output_file
-        .seek(SeekFrom::Current(encoded_placeholder.len() as i64))
+        .seek(SeekFrom::Current(placeholder_len as i64))
         .unwrap();
     std::io::copy(&mut input_file, &mut output_file).unwrap();
 
