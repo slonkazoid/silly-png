@@ -10,11 +10,11 @@ see [silly.png](silly.png) for an example
 
 ```sh
 # rickroll
-cargo run -- my_funny_cat_image_real.png scripts/epic_rickroll_script.sh rickroll.mp4
+cargo r -r -- my_funny_cat_image_real.png scripts/epic_rickroll_script.sh rickroll.mp4
 # you can now send my_funny_cat_image_real.silly.png to your friends!
 
 # you can even boot a VM
-cargo run -- amogus.png scripts/qemu.sh AmogOS-v0.2.1.iso
+cargo r -r -- amogus.png scripts/qemu.sh AmogOS-v0.2.1.iso
 # see qemu.sh for details
 ```
 
