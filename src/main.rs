@@ -8,9 +8,8 @@ use clap::Parser;
 use png::text_metadata::{EncodableTextChunk, TEXtChunk};
 
 const PNG_HEADER_SIZE: usize = 8;
-const FUCK: usize = 12;
-const IHDR_SIZE: usize = 13;
-const IHDR_END_IDX: usize = IHDR_SIZE + FUCK + PNG_HEADER_SIZE;
+const IHDR_CHUNK_SIZE: usize = 13 + 12;
+const IHDR_END_IDX: usize = IHDR_CHUNK_SIZE + PNG_HEADER_SIZE;
 
 macro_rules! format_code {
     ($($arg:tt)*) => {
