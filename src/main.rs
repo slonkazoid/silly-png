@@ -19,9 +19,9 @@ macro_rules! format_code {
 # https://gitlab.com/slonkazoid/silly-png
 # https://slonk.ing/
 offsets=({})
-lengths=({})
+sizes=({})
 extract() {{
-    dd if=$0 skip=${{offsets[${{1:-0}}]}}B count=${{lengths[${{1:-0}}]}}B bs=4M status=none
+    dd if=$0 skip=${{offsets[${{1:-0}}]}}B count=${{sizes[${{1:-0}}]}}B bs=4M status=none
 }}
 
 {}
@@ -87,7 +87,7 @@ fn main() {
     let mut encoded_text = Vec::new();
     text_chunk.encode(&mut encoded_text).unwrap();
 
-    let mut output_file = File::create(&args.output.unwrap_or_else(|| {
+    let mut output_file = File::create(args.output.unwrap_or_else(|| {
         let mut path = args.png.clone();
         path.set_extension("silly.png");
         path
@@ -105,11 +105,11 @@ fn main() {
         .unwrap();
     std::io::copy(&mut input_file, &mut output_file).unwrap();
 
-    let (offsets, lengths) = if let Some(files) = args.files {
+    let (offsets, sizes) = if let Some(files) = args.files {
         let mut offsets = String::with_capacity(offsets_len + 1);
         let mut blocks = String::with_capacity(offsets_len + 1);
 
-        let mut last = output_file.seek(SeekFrom::Current(0)).unwrap();
+        let mut last = output_file.stream_position().unwrap();
         for file in files {
             eprintln!("copying {} to file", file.display());
             let written = std::io::copy(&mut File::open(&file).unwrap(), &mut output_file).unwrap();
@@ -127,7 +127,7 @@ fn main() {
     };
 
     eprintln!("writing shellscript");
-    let code = format_code!(&offsets, &lengths, &script);
+    let code = format_code!(&offsets, &sizes, &script);
     let text_chunk = TEXtChunk::new(args.keyword, code);
     output_file.seek(SeekFrom::Start(marker)).unwrap();
     text_chunk.encode(&mut output_file).unwrap();
