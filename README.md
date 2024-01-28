@@ -5,7 +5,7 @@ embed shellscripts and files into png files!
 ## usage
 
 ```sh
-cargo run -- my_funny_cat_image_real.png epic_rickroll_script_
+cargo run -- my_funny_cat_image_real.png epic_rickroll_script.sh rickroll.mp4
 # you can now send my_funny_cat_image_real.silly.png to your friends!
 ```
 
