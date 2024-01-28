@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{Read, Seek, SeekFrom},
+    io::{Read, Seek, SeekFrom, Write},
     path::PathBuf,
 };
 
@@ -71,6 +71,27 @@ fn main() {
 
     let mut input_file = File::open(&args.png).unwrap();
 
+    let mut header: [u8; IHDR_END_IDX] = [0; IHDR_END_IDX];
+    input_file.read_exact(&mut header).unwrap();
+
+    if [
+        0x7d, // }
+        0x7b, // {
+        0x29, // )
+        0x28, // (
+        0x27, // '
+        0x22, // "
+              // TODO: add more
+    ]
+    .iter()
+    .any(|x| header.contains(x))
+    {
+        eprintln!("warning: the png header might contain a syntax error");
+        eprintln!(
+            "try playing around with the image parameters (like width, height) to mitigate this"
+        );
+    }
+
     let mut script_file = File::open(&args.script).unwrap();
     let len = script_file.seek(SeekFrom::End(0)).unwrap();
     script_file.seek(SeekFrom::Start(0)).unwrap();
@@ -83,9 +104,11 @@ fn main() {
 
     let code = format_code!(" ".repeat(offsets_len), " ".repeat(offsets_len), &script);
 
-    let text_chunk = TEXtChunk::new(args.keyword.clone(), code);
-    let mut encoded_text = Vec::new();
-    text_chunk.encode(&mut encoded_text).unwrap();
+    let placeholder_text_chunk = TEXtChunk::new(args.keyword.clone(), code);
+    let mut encoded_placeholder = Vec::new();
+    placeholder_text_chunk
+        .encode(&mut encoded_placeholder)
+        .unwrap();
 
     let mut output_file = File::create(args.output.unwrap_or_else(|| {
         let mut path = args.png.clone();
@@ -95,13 +118,9 @@ fn main() {
     .unwrap();
 
     eprintln!("writing png data");
-    let marker = std::io::copy(
-        &mut (&input_file).take(IHDR_END_IDX as u64),
-        &mut output_file,
-    )
-    .unwrap();
+    output_file.write_all(&header).unwrap();
     output_file
-        .seek(SeekFrom::Current(encoded_text.len() as i64))
+        .seek(SeekFrom::Current(encoded_placeholder.len() as i64))
         .unwrap();
     std::io::copy(&mut input_file, &mut output_file).unwrap();
 
@@ -129,6 +148,8 @@ fn main() {
     eprintln!("writing shellscript");
     let code = format_code!(&offsets, &sizes, &script);
     let text_chunk = TEXtChunk::new(args.keyword, code);
-    output_file.seek(SeekFrom::Start(marker)).unwrap();
+    output_file
+        .seek(SeekFrom::Start(IHDR_END_IDX as u64))
+        .unwrap();
     text_chunk.encode(&mut output_file).unwrap();
 }
