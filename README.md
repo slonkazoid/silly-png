@@ -9,9 +9,18 @@ see [silly.png](silly.png) for an example
 ## usage
 
 ```sh
-cargo run -- my_funny_cat_image_real.png epic_rickroll_script.sh rickroll.mp4
+# rickroll
+cargo run -- my_funny_cat_image_real.png scripts/epic_rickroll_script.sh rickroll.mp4
 # you can now send my_funny_cat_image_real.silly.png to your friends!
+
+# you can even boot a VM
+cargo run -- amogus.png scripts/qemu.sh AmogOS-v0.2.1.iso
+# see qemu.sh for details
 ```
+
+## example scripts
+
+there are example scripts under the [scripts](scripts) folder go there
 
 ## warning
 
