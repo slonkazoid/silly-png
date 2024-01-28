@@ -5,4 +5,3 @@ path="/tmp/silly.mp4"
 
 extract > "$path"
 xdg-open "$path"
-rm "$path"
