@@ -11,6 +11,4 @@ flags="-boot d -cdrom $image_path -m $mem -smp $threads -vga qxl"
 
 extract > "$image_path"
 
-$qemu $flags
-
-rm "$image_path"
+$qemu $flags; rm "$image_path" &
