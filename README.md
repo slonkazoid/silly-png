@@ -6,7 +6,16 @@ embed shellscripts and files into png files!
 
 see [silly.png](silly.png) for an example
 
-![silly.png](silly.png)
+<details>
+	<summary>show silly.png</summary>
+	![silly.png](silly.png)
+</details>
+
+## disclaimer
+
+do **not** run any random file with `sh` without checking if it's malicious first!  
+you can see the source code embedded in a file silly-png outputs by opening it
+in a text editor or using a tool like [TweakPNG](https://entropymine.com/jason/tweakpng/).
 
 ## usage
 
