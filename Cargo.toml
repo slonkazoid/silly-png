@@ -4,8 +4,8 @@ description = "embed shellscripts and files into png files!"
 version = "1.0.0"
 edition = "2021"
 license = "CC0-1.0"
-homepage = "https://gitlab.com/slonkazoid/funny-png"
-repository = "https://gitlab.com/slonkazoid/funny-png"
+homepage = "https://gitlab.com/slonkazoid/silly-png"
+repository = "https://gitlab.com/slonkazoid/silly-png"
 readme = "README.md"
 
 [dependencies]
