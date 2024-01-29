@@ -9,12 +9,15 @@ see [silly.png](silly.png) for an example
 ## usage
 
 ```sh
+# install silly-png
+cargo install silly-png
+
 # rickroll
-cargo r -r -- my_funny_cat_image_real.png scripts/epic_rickroll_script.sh rickroll.mp4
+silly-png my_funny_cat_image_real.png scripts/epic_rickroll_script.sh rickroll.mp4
 # you can now send my_funny_cat_image_real.silly.png to your friends!
 
 # you can even boot a VM
-cargo r -r -- amogus.png scripts/qemu.sh AmogOS-v0.2.1.iso
+silly-png amogus.png scripts/qemu.sh AmogOS-v0.2.1.iso
 # see qemu.sh for details
 ```
 
