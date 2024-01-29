@@ -2,6 +2,8 @@
 
 embed shellscripts and files into png files!
 
+[![crates.io](https://img.shields.io/crates/v/silly-png.svg)](https://crates.io/crates/silly-png)
+
 see [silly.png](silly.png) for an example
 
 ![silly.png](silly.png)
