@@ -19,8 +19,9 @@ macro_rules! format_code {
 # https://slonk.ing/
 offsets=({})
 sizes=({})
+start_dir=\"$PWD\"
 extract() {{
-    dd if=$0 skip=${{offsets[${{1:-0}}]}}B count=${{sizes[${{1:-0}}]}}B bs=4M status=none
+    dd if=\"$start_dir/$0\" skip=${{offsets[${{1:-0}}]}}B count=${{sizes[${{1:-0}}]}}B bs=4M status=none
 }}
 
 {}
