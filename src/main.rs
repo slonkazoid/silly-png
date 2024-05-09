@@ -7,31 +7,56 @@ use std::{
 use clap::Parser;
 use png::text_metadata::{EncodableTextChunk, TEXtChunk};
 
+// Do not change
 const PNG_HEADER_SIZE: usize = 8;
 const IHDR_CHUNK_SIZE: usize = 13 + 12;
 const IHDR_END_IDX: usize = IHDR_CHUNK_SIZE + PNG_HEADER_SIZE;
 
-macro_rules! format_code {
-    ($($arg:tt)*) => {
-        format!("
+// Do change
+const MAX_BLOCK_SIZE: u64 = 4 * 1024 * 1024;
+const DIGITS: usize = 16;
+
+fn format_code(offsets: &[u64], block_sizes: &[u64], counts: &[u64], code: &str) -> String {
+    let [offsets, block_sizes, counts] = [offsets, block_sizes, counts].map(|x| {
+        x.iter()
+            .map(|y| format!("{:0>1$}", y, DIGITS))
+            .collect::<Vec<String>>()
+            .join(" ")
+    });
+
+    format!(
+        "
 # shellscript embedded with silly-png
 # https://gitlab.com/slonkazoid/silly-png
 # https://slonk.ing/
-offsets=({})
-sizes=({})
-start_dir=\"$PWD\"
+_offsets=({})
+_block_sizes=({})
+_counts=({})
+_start_dir=\"$PWD\"
+# usage: extract [<index> [-p]]
 extract() {{
-    dd if=\"$start_dir/$0\" skip=${{offsets[${{1:-0}}]}} count=${{sizes[${{1:-0}}]}} ibs=1 obs=4M status=none
+    local i=${{1:-0}}
+    local status=none
+    [[ \"$2\" == '-p' ]] && status=progress
+    dd if=\"${{_start_dir}}/$0\" \\
+        skip=${{_offsets[$i]:?file $i not found}} \\
+        bs=${{_block_sizes[$i]}} \\
+        count=${{_counts[$i]}} \\
+        status=$status
 }}
 
+# script start
 {}
+# script end
+
 exit
-", $($arg)*)
-    };
+",
+        offsets, block_sizes, counts, code
+    )
 }
 
 #[derive(Parser, Debug)]
-#[command(author = "slonkazoid", version = env!("CARGO_PKG_VERSION"), about = "silly little png shell script embedder", long_about = None)]
+#[command(author, version, about = "silly little png shell script embedder")]
 struct Args {
     #[arg(
         short,
@@ -64,6 +89,13 @@ struct Args {
 
     #[arg(index = 3)]
     files: Option<Vec<PathBuf>>,
+}
+
+fn evil_file_size(file: &mut File) -> Result<u64, std::io::Error> {
+    let len = file.seek(SeekFrom::End(0))?;
+    file.seek(SeekFrom::Start(0))?;
+
+    Ok(len)
 }
 
 fn main() {
@@ -99,11 +131,15 @@ fn main() {
     let mut script = String::with_capacity(len as usize);
     script_file.read_to_string(&mut script).unwrap();
 
-    let offsets_len = 19 * args.files.as_ref().map(|x| x.len()).unwrap_or(0)
-        - args.files.as_ref().map(|_| 1).unwrap_or(0);
+    let file_count = args.files.as_ref().map(|x| x.len()).unwrap_or(0);
 
     // set up placeholder for length counting
-    let placeholder_code = format_code!(" ".repeat(offsets_len), " ".repeat(offsets_len), &script);
+    let placeholder_code = format_code(
+        &[0].repeat(file_count),
+        &[0].repeat(file_count),
+        &[0].repeat(file_count),
+        &script,
+    );
     let placeholder_text_chunk = TEXtChunk::new(args.keyword.clone(), placeholder_code);
     let mut encoded_placeholder = Vec::new();
     placeholder_text_chunk
@@ -126,29 +162,49 @@ fn main() {
         .unwrap();
     std::io::copy(&mut input_file, &mut output_file).unwrap();
 
-    let (offsets, sizes) = if let Some(files) = args.files {
-        let mut offsets = String::with_capacity(offsets_len + 1);
-        let mut blocks = String::with_capacity(offsets_len + 1);
+    let (offsets, block_sizes, counts) = if let Some(files) = args.files {
+        let mut offsets = Vec::with_capacity(file_count);
+        let mut block_sizes = Vec::with_capacity(file_count);
+        let mut counts = Vec::with_capacity(file_count);
 
         let mut last = output_file.stream_position().unwrap();
-        for file in files {
-            eprintln!("copying {} to file", file.display());
-            let written = std::io::copy(&mut File::open(&file).unwrap(), &mut output_file).unwrap();
-            offsets.push_str(&format!("{:0>18} ", last));
-            blocks.push_str(&format!("{:0>18} ", written));
+
+        for path in files {
+            eprintln!("copying {} to png file", path.display());
+            let mut file = File::open(path).expect("couldn't open file");
+            let size = evil_file_size(&mut file).unwrap();
+
+            let block_size = if size > MAX_BLOCK_SIZE {
+                divisors::get_divisors(size)
+                    .into_iter()
+                    .filter(|x| *x <= MAX_BLOCK_SIZE)
+                    .collect::<Vec<_>>()
+                    .pop()
+                    .unwrap_or(1)
+            } else {
+                size
+            };
+
+            let padding = last.next_multiple_of(block_size) - last;
+            output_file
+                .write_all(&[0].repeat(padding as usize))
+                .unwrap();
+
+            let written = padding + std::io::copy(&mut file, &mut output_file).unwrap();
+            offsets.push((padding + last) / block_size);
+            block_sizes.push(block_size);
+            counts.push(size / block_size);
+
             last += written;
         }
 
-        offsets.pop().unwrap();
-        blocks.pop().unwrap();
-
-        (offsets, blocks)
+        (offsets, block_sizes, counts)
     } else {
-        ("".into(), "".into())
+        Default::default()
     };
 
     eprintln!("writing shellscript");
-    let code = format_code!(&offsets, &sizes, &script);
+    let code = format_code(&offsets, &block_sizes, &counts, &script);
     let text_chunk = TEXtChunk::new(args.keyword, code);
     output_file
         .seek(SeekFrom::Start(IHDR_END_IDX as u64))

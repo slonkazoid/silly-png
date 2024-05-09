@@ -10,6 +10,7 @@ readme = "README.md"
 
 [dependencies]
 clap = { version = "4.4.18", features = ["derive"] }
+divisors = "0.2.1"
 png = "0.17.11"
 
 [profile.release]
