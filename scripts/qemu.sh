@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # use all threads and half of available system memory
 threads="$(nproc)"

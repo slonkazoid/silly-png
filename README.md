@@ -13,20 +13,22 @@ see [silly.png](silly.png) for an example
 
 ## disclaimer
 
-do **not** run any random file with `sh` without checking if it's malicious first!  
+do **not** run any random file with `bash` without checking if it's malicious first!  
 you can see the source code embedded in a file silly-png outputs by opening it
 in a hex editor like [ImHex](https://github.com/WerWolv/ImHex) or using a tool
 like [TweakPNG](https://entropymine.com/jason/tweakpng/).
 
 ## usage
 
-```sh
+```bash
 # install silly-png
 cargo install silly-png
 
 # rickroll
 silly-png my_funny_cat_image_real.png scripts/epic_rickroll_script.sh rickroll.mp4
 # you can now send my_funny_cat_image_real.silly.png to your friends!
+# run the script yourself
+bash my_funny_cat_image_real.silly.png
 
 # you can even boot a VM
 silly-png amogus.png scripts/qemu.sh AmogOS-v0.2.1.iso
