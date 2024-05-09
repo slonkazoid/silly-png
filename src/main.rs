@@ -12,14 +12,16 @@ const PNG_HEADER_SIZE: usize = 8;
 const IHDR_CHUNK_SIZE: usize = 13 + 12;
 const IHDR_END_IDX: usize = IHDR_CHUNK_SIZE + PNG_HEADER_SIZE;
 
-// Do change
-const MAX_BLOCK_SIZE: u64 = 4 * 1024 * 1024;
-const DIGITS: usize = 16;
-
-fn format_code(offsets: &[u64], block_sizes: &[u64], counts: &[u64], code: &str) -> String {
+fn format_code(
+    offsets: &[u64],
+    block_sizes: &[u64],
+    counts: &[u64],
+    code: &str,
+    digits: usize,
+) -> String {
     let [offsets, block_sizes, counts] = [offsets, block_sizes, counts].map(|x| {
         x.iter()
-            .map(|y| format!("{:0>1$}", y, DIGITS))
+            .map(|y| format!("{:0>1$}", y, digits))
             .collect::<Vec<String>>()
             .join(" ")
     });
@@ -74,9 +76,22 @@ struct Args {
     )]
     keyword: String,
 
-    // TODO
-    //#[arg(short, long, default_value = "4M", help = "block size for alignment and such")]
-    //block_size: usize,
+    #[arg(
+        short,
+        long,
+        default_value_t = 4096 * 1024,
+        help = "Maximum block size",
+    )]
+    max_block_size: u64,
+
+    #[arg(
+        short,
+        long,
+        default_value_t = 16,
+        help = "Number of digits in the generated array entries"
+    )]
+    digits: usize,
+
     #[arg(index = 1, help = "PNG file to operate on")]
     png: PathBuf,
 
@@ -139,6 +154,7 @@ fn main() {
         &[0].repeat(file_count),
         &[0].repeat(file_count),
         &script,
+        args.digits,
     );
     let placeholder_text_chunk = TEXtChunk::new(args.keyword.clone(), placeholder_code);
     let mut encoded_placeholder = Vec::new();
@@ -174,10 +190,10 @@ fn main() {
             let mut file = File::open(path).expect("couldn't open file");
             let size = evil_file_size(&mut file).unwrap();
 
-            let block_size = if size > MAX_BLOCK_SIZE {
+            let block_size = if size > args.max_block_size {
                 divisors::get_divisors(size)
                     .into_iter()
-                    .filter(|x| *x <= MAX_BLOCK_SIZE)
+                    .filter(|x| *x <= args.max_block_size)
                     .collect::<Vec<_>>()
                     .pop()
                     .unwrap_or(1)
@@ -204,7 +220,7 @@ fn main() {
     };
 
     eprintln!("writing shellscript");
-    let code = format_code(&offsets, &block_sizes, &counts, &script);
+    let code = format_code(&offsets, &block_sizes, &counts, &script, args.digits);
     let text_chunk = TEXtChunk::new(args.keyword, code);
     output_file
         .seek(SeekFrom::Start(IHDR_END_IDX as u64))
