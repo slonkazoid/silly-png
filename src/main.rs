@@ -21,7 +21,7 @@ offsets=({})
 sizes=({})
 start_dir=\"$PWD\"
 extract() {{
-    dd if=\"$start_dir/$0\" skip=${{offsets[${{1:-0}}]}}B count=${{sizes[${{1:-0}}]}}B bs=4M status=none
+    dd if=\"$start_dir/$0\" skip=${{offsets[${{1:-0}}]}} count=${{sizes[${{1:-0}}]}} ibs=1 obs=4M status=none
 }}
 
 {}
