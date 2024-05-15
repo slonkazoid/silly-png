@@ -34,13 +34,12 @@ fn format_code(
 _offsets=({})
 _block_sizes=({})
 _counts=({})
-_start_dir=\"$PWD\"
 # usage: extract [<index> [-p]]
 extract() {{
     local i=${{1:-0}}
     local status=none
     [[ \"$2\" == '-p' ]] && status=progress
-    dd if=\"${{_start_dir}}/$0\" \\
+    dd if=\"$0\" \\
         skip=${{_offsets[$i]:?file $i not found}} \\
         bs=${{_block_sizes[$i]}} \\
         count=${{_counts[$i]}} \\
@@ -48,7 +47,7 @@ extract() {{
 }}
 
 # script start
-{}
+({})
 # script end
 
 exit
