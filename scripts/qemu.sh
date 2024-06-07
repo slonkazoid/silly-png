@@ -7,7 +7,7 @@ image_path="/tmp/funny.iso"
 
 qemu="qemu-system-x86_64"
 flags="-boot d -cdrom $image_path -m $mem -smp $threads -vga qxl"
-[ -e /dev/kvm ] && flags="$flags -accel kvm" # enable kvm if available
+[ -e /dev/kvm ] && flags+=" -accel kvm" # enable kvm if available
 
 extract > "$image_path"
 
