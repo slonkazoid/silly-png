@@ -2,6 +2,7 @@ use std::{
     fs::File,
     io::{Read, Seek, SeekFrom, Write},
     path::PathBuf,
+    process::exit,
 };
 
 use clap::Parser;
@@ -91,6 +92,14 @@ struct Args {
     )]
     digits: usize,
 
+    #[arg(
+        short,
+        long,
+        default_value_t = false,
+        help = "Force build even if it may not be interpretable"
+    )]
+    force: bool,
+
     #[arg(index = 1, help = "PNG file to operate on")]
     png: PathBuf,
 
@@ -132,10 +141,18 @@ fn main() {
     .iter()
     .any(|x| header.contains(x))
     {
-        eprintln!("warning: the png header might contain a syntax error");
+        let fatal = !args.force;
+        eprintln!(
+            "{}: the png header might contain a syntax error",
+            if fatal { "fatal" } else { "warning" }
+        );
         eprintln!(
             "try playing around with the image parameters (like width, height) to mitigate this"
         );
+       
+        if fatal {
+            exit(1);
+        }
     }
 
     let mut script_file = File::open(&args.script).unwrap();
