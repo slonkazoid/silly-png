@@ -149,7 +149,7 @@ fn main() {
         eprintln!(
             "try playing around with the image parameters (like width, height) to mitigate this"
         );
-       
+
         if fatal {
             exit(1);
         }
@@ -205,6 +205,13 @@ fn main() {
             eprintln!("copying {} to png file", path.display());
             let mut file = File::open(path).expect("couldn't open file");
             let size = evil_file_size(&mut file).unwrap();
+
+            // handle empty files
+            if size == 0 {
+                offsets.push(0);
+                counts.push(0);
+                continue;
+            }
 
             let block_size = if size > args.max_block_size {
                 divisors::get_divisors(size)
